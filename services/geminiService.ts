@@ -1,8 +1,10 @@
-import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 
-// Initialize the API client
-// Note: In a real production app, ensure your API key is restricted or proxied.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// 1. 修改点：初始化 AI 客户端
+// 必须改成 import.meta.env.VITE_API_KEY 浏览器才能读到钥匙
+const ai = new GoogleGenAI({ 
+  apiKey: import.meta.env.VITE_API_KEY 
+});
 
 const SYSTEM_INSTRUCTION = `
 You are NovaBot, the helpful AI assistant for NovaTech Solutions.
@@ -16,12 +18,16 @@ Key Services:
 3. CyberShield: Enterprise-grade security auditing and real-time threat monitoring.
 `;
 
-let chatSession: Chat | null = null;
+// 定义 Chat 类型（为了防止 TypeScript 报错，给个 any 备用）
+let chatSession: any | null = null;
 
-export const getChatSession = (): Chat => {
+export const getChatSession = () => {
   if (!chatSession) {
+    // 2. 修改点：使用稳定版模型 gemini-1.5-flash
+    // gemini-2.5-flash 现在还处于 API 白名单测试阶段，大概率会报 404 或 429 错误
+    // 1.5-flash 额度大，回复快，足够在这个 Demo 里用了
     chatSession = ai.chats.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
       },
@@ -36,10 +42,10 @@ export const sendMessageToGemini = async function* (message: string) {
     const responseStream = await chat.sendMessageStream({ message });
     
     for await (const chunk of responseStream) {
-       // Type assertion to ensure we access the correct property safely
-       const c = chunk as GenerateContentResponse;
-       if (c.text) {
-         yield c.text;
+       // 直接获取文本，简单粗暴
+       const text = chunk.text; 
+       if (text) {
+         yield text;
        }
     }
   } catch (error) {
