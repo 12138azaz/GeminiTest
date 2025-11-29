@@ -27,7 +27,7 @@ export const getChatSession = () => {
     // gemini-2.5-flash 现在还处于 API 白名单测试阶段，大概率会报 404 或 429 错误
     // 1.5-flash 额度大，回复快，足够在这个 Demo 里用了
     chatSession = ai.chats.create({
-      model: 'gemini-1.5-flash',
+     model: 'gemini-1.5-flash-001',
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
       },
